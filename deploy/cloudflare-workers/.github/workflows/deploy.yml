@@ -1,0 +1,43 @@
+# Auto-deploy a Publii-generated site to Cloudflare Workers.
+#
+# WHERE THIS FILE LIVES
+# This is a template. Copy it to the *site* repository (the repo that
+# holds wrangler.toml + public/), at exactly this path:
+#   .github/workflows/deploy.yml
+# Workflows only run from a repository's own .github/workflows/
+# directory, so leaving this copy under deploy/cloudflare-workers/ in
+# the Publii source repo does nothing on its own.
+#
+# REQUIRED SECRETS (site repo → Settings → Secrets and variables →
+# Actions → New repository secret). Same two secrets as the cuotiben
+# project uses; secrets are per-repository, so they must be added again
+# for the site repo even if they already exist elsewhere:
+#   CLOUDFLARE_API_TOKEN    — Edit Cloudflare Workers template token
+#   CLOUDFLARE_ACCOUNT_ID   — from the Cloudflare dashboard
+#
+# HOW IT WORKS
+# Every push to main (and any manual Run workflow click) checks out the
+# site repo, installs Wrangler, and runs `wrangler deploy`. Wrangler
+# reads wrangler.toml at the repo root and uploads public/ as Static
+# Assets. No build step is needed — Publii already generated the files.
+# A failed deploy fails the workflow run; nothing is deployed half-way.
+name: Deploy Publii site to Cloudflare Workers
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install -g wrangler
+      - run: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
