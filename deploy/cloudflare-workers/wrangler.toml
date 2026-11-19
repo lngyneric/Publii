@@ -1,0 +1,42 @@
+# Cloudflare Workers — Static Assets template for a Publii-generated site.
+#
+# WHAT THIS IS / IS NOT
+# - This deploys the *static website Publii generates*, not Publii itself.
+#   Publii is an Electron desktop app (app/main.js); it cannot run on Workers.
+# - Copy this file to the root of your *site* repository (or to the folder
+#   you deploy from), not to the root of this Publii source repository.
+#   Deploying this source repo as-is would try to upload the whole app
+#   source as static assets — that is not what you want.
+#
+# LAYOUT (site repository)
+#   wrangler.toml          <- this file, at the repo root
+#   public/                <- Publii output: copy <site>/output/* here
+#     index.html
+#     assets/...
+#     ...
+#
+# If you instead drop this file directly into Publii's output folder,
+# change directory below to "." — but the public/ layout above is the
+# recommended one, because it keeps the config out of the uploaded files.
+#
+# Rename the Worker to your site name. It becomes
+# https://<name>.<your-subdomain>.workers.dev (change it later in the
+# Cloudflare dashboard, or add a custom domain there).
+
+name = "my-publii-site"
+compatibility_date = "2026-11-19"
+
+[assets]
+directory = "./public"
+
+# Publii sites are multi-page static sites, not single-page apps, so do
+# NOT use "single-page-application" here — that would return index.html
+# with 200 for every unknown URL. "404-page" returns the nearest
+# 404.html (if your theme provides one), otherwise a plain 404.
+not_found_handling = "404-page"
+
+# No `main` field: there is no Worker code, only static assets.
+# If you later add an API Worker, add `main = "src/index.js"` and
+# `binding = "ASSETS"` under [assets], then serve assets from code with
+# `env.ASSETS.fetch(request)`. Without the binding, `env.ASSETS` is
+# undefined — static files are still served directly by the edge.
