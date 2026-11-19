@@ -51,17 +51,36 @@
    update the site. A custom domain is added in the Cloudflare
    dashboard (Workers & Pages → your Worker → Settings → Domains).
 
-## Route B — Git-connected deploy (automatic on push)
+## Route B — GitHub Actions auto-deploy (automatic on push)
 
-This reuses Publii's existing GitHub sync, which the app already
-documents as useful for external hosts such as Cloudflare Pages.
+Same site-repo layout as Route A, plus a workflow that deploys on
+every push to `main`. This is the same pattern the cuotiben project
+already uses.
 
 1. In Publii, set the site's deployment to **GitHub Pages** and sync
    the generated site to a dedicated site repository (not this Publii
    source repo).
-2. In that site repo, add this `wrangler.toml` at the root and put the
-   generated files under `public/` (same layout as Route A).
-3. In the Cloudflare dashboard: Workers & Pages → Create → connect
+2. In that site repo, add this `wrangler.toml` at the root, put the
+   generated files under `public/`, and copy
+   `.github/workflows/deploy.yml` from this template folder to
+   `.github/workflows/deploy.yml` at the site repo root. (Workflows
+   only run from a repo's own `.github/workflows/` directory.)
+3. In the site repo, add two repository secrets (Settings → Secrets
+   and variables → Actions): `CLOUDFLARE_API_TOKEN` (Edit Cloudflare
+   Workers template) and `CLOUDFLARE_ACCOUNT_ID`. Secrets are
+   per-repository — add them again even if they exist in another repo.
+4. Push to `main`. The workflow checks out the repo, installs
+   Wrangler and runs `wrangler deploy`; the Actions run log shows
+   success or failure. Manual re-deploy: Actions → the workflow →
+   Run workflow.
+
+## Route C — Workers Builds (dashboard Git connection, no workflow)
+
+Alternative to Route B, no workflow file or secrets needed:
+
+1. Same site repo as Route B (`wrangler.toml` at root, files in
+   `public/`).
+2. In the Cloudflare dashboard: Workers & Pages → Create → connect
    that repository (Workers Builds). No build command is needed — the
    files are already static. Every push then deploys automatically.
 
